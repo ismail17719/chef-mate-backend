@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kitchens', function (Blueprint $table) {
+        Schema::create('weekly_menus', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->string('kitchen_title');
-            $table->string('kitchen_image')->nullable();
-            $table->text('description')->nullable();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('menu_item_id');
+            $table->unsignedBigInteger('days_of_week_id');
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kitchens');
+        Schema::dropIfExists('weekly_menus');
     }
 };

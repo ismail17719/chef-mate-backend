@@ -132,4 +132,16 @@ class UserController extends Controller
             'message' => 'Logout Successfully'
         ]);
     }
+
+
+    /// Logged in user data
+
+    public function loggedInUser(){
+        $userData = Auth::user();
+
+        return response()->json([
+            'user' => $userData,
+            'message' => 'Logged in user data',
+        ]);
+    }
 }

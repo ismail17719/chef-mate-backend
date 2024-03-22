@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kitchens', function (Blueprint $table) {
+        Schema::create('menu_items', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->string('kitchen_title');
-            $table->string('kitchen_image')->nullable();
+            $table->string('food_name');
+            $table->string('price');
+            $table->string('size')->nullable();
+            $table->string('cooking_time')->nullable();
             $table->text('description')->nullable();
+            $table->string('food_image')->nullable();
+            $table->enum('status',['active','inactive'])->default('active');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });
     }
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kitchens');
+        Schema::dropIfExists('menu_items');
     }
 };

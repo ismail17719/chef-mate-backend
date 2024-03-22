@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kitchens', function (Blueprint $table) {
+        Schema::create('days_of_weeks', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->string('kitchen_title');
-            $table->string('kitchen_image')->nullable();
-            $table->text('description')->nullable();
+            $table->string('day');
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kitchens');
+        Schema::dropIfExists('days_of_weeks');
     }
 };
