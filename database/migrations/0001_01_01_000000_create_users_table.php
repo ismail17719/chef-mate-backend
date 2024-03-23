@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('phone');
             $table->string('profile_image')->nullable();
             $table->text('address');
-            $table->enum('role',['aadmin','chef','user'])->default('chef');
+            $table->enum('role',['admin','chef','user'])->default('chef');
             $table->enum('status',['active','inactive'])->default('active');
             $table->timestamps();
         });
