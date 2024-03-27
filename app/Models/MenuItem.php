@@ -10,4 +10,9 @@ class MenuItem extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function weeklyMenus(){
+        return $this->hasMany(WeeklyMenu::class);
+    }
+   
 }

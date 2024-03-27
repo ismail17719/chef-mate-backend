@@ -9,77 +9,78 @@ use App\Models\Kitchen;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use App\Services\FileUpload;
+
 
 class ChefController extends Controller
 {
+    public function __construct(private FileUpload $fileupload)
+    {
+        
+    }
      /// User Register
     public function register(ChefRequest $request){
         
         //// Create user with image
-                if ($request->file('profile_image')) {
-                    $image_taken = $request->file('profile_image');
-                    $manager = new ImageManager(new Driver());
-                    $image_name = hexdec(uniqid()).'.'.$image_taken->getClientOriginalExtension();
-                    $image = $manager->read($image_taken);
-                    $image = $image->resize(120,120);
-                    $image->save(base_path('public/upload/user_images/'.$image_name));
-                    $save_url = 'upload/user_images/'.$image_name;
-        
-                  
-                    /// Create User
-                    $user_id =  User::insertGetId([
-                        'email' => $request->email,
-                        'phone' => $request->phone,
-                        'password' => Hash::make($request->password),
-                        'address' => $request->address,
-                        'profile_image' => $save_url,
-                        'created_at' => Carbon::now()
-                    ]);
-        
-                    //// Insert Kitchen Title and get this id      
-                    Kitchen::insert([
-                        'user_id' => $user_id,
-                        'kitchen_title' => $request->kitchen_title,
-                        'created_at' => Carbon::now()
-                    ]);
-        
-                    /// Generate Token
-                    $user = User::where('email',$request->email)->first();
-                    $token = $user->createToken($request->email)->plainTextToken;
-        
-                    return response()->json([
-                        "token" => $token,
-                        "message" => "Registration successfully",
-                    ]);
-                }
+        if ($request->file('profile_image')) {
+            $profile_image = $request->file('profile_image');
+           
+            $save_url = $this->fileupload->uploadProfileImage($profile_image);
+
+            
+            /// Create User
+            $user_id =  User::insertGetId([
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'address' => $request->address,
+                'profile_image' => $save_url,
+                'created_at' => Carbon::now()
+            ]);
+
+            //// Insert Kitchen Title and get this id      
+            Kitchen::insert([
+                'user_id' => $user_id,
+                'kitchen_title' => $request->kitchen_title,
+                'created_at' => Carbon::now()
+            ]);
+
+            /// Generate Token
+            $user = User::where('email',$request->email)->first();
+            $token = $user->createToken($request->email)->plainTextToken;
+
+            return response()->json([
+                "token" => $token,
+                "message" => "Registration successfully",
+            ]);
+        }
                 
         
-        /// Create User
-                $user_id =  User::insertGetId([
-                        'email' => $request->email,
-                        'phone' => $request->phone,
-                        'password' => Hash::make($request->password),
-                        'address' => $request->address,
-                        'created_at' => Carbon::now()
-                ]);
-        
+        // Create User
+        $user_id =  User::insertGetId([
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'address' => $request->address,
+                'created_at' => Carbon::now()
+        ]);
+
+       
         ///// Insert Kitchen Title and get this id      
-                Kitchen::insert([
-                    'user_id' => $user_id,
-                    'kitchen_title' => $request->kitchen_title,
-                    'created_at' => Carbon::now()
-                ]);
+        Kitchen::insert([
+            'user_id' => $user_id,
+            'kitchen_title' => $request->kitchen_title,
+            'created_at' => Carbon::now()
+        ]);
         
         /// Generate Token
-                $user = User::where('email',$request->email)->first();
-                $token = $user->createToken($request->email)->plainTextToken;
-        
-                return response()->json([
-                    "token" => $token,
-                    "message" => "Registration successfully",
-                ]);
+        $user = User::where('email',$request->email)->first();
+        $token = $user->createToken($request->email)->plainTextToken;
+
+        return response()->json([
+            "token" => $token,
+            "message" => "Registration successfully",
+        ]);
     }
     /// End Method
 
@@ -138,14 +139,40 @@ class ChefController extends Controller
 
     /// Edit Profile
 
-    public function editProfile(Request $request){
+    public function updateProfile(Request $request){
         $request->validate([
             'email' => 'required',
-            'phone' => 'required'
+            'phone' => 'required',
+            'profile_image' => 'extensions:png,jpeg,jpg'
         ]);
 
         $id = Auth::id();
 
+        if ($request->file('profile_image')) {
+
+            $profile_image = $request->file('profile_image');
+            $save_url = $this->fileupload->uploadProfileImage($profile_image);
+
+            User::find($id)->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'profile_image' => $save_url,
+                'updated_at' => Carbon::now()
+            ]);
+            
+            Kitchen::where('user_id',$id)->update([
+                'description' => $request->description,
+                'updated_at' => Carbon::now()
+            ]);
+    
+            return response()->json([
+                'message' => 'Update profile successfully'
+            ]);
+        }
+
+        /// Update without profile image
         User::find($id)->update([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -154,6 +181,10 @@ class ChefController extends Controller
             'updated_at' => Carbon::now()
         ]);
 
+        Kitchen::where('user_id',$id)->update([
+            'description' => $request->description,
+            'updated_at' => Carbon::now()
+        ]);
         return response()->json([
             'message' => 'Update profile successfully'
         ]);

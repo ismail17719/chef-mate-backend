@@ -10,4 +10,6 @@ class DaysOfWeek extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    
 }

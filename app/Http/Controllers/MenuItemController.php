@@ -4,25 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\MenuItemRequest;
 use App\Models\MenuItem;
+use App\Services\FileUpload;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
+
 
 class MenuItemController extends Controller
 {
+    public function __construct(private FileUpload $fileupload)
+    {
+        
+    }
     public function addFood(MenuItemRequest $request){
 
         $user_id = Auth::id();
-        
 
-        $takenImage = $request->file('food_image');
-        $manager = new ImageManager(new Driver());
-        $image_name = hexdec(uniqid()).".".$takenImage->getClientOriginalExtension();
-        $image = $manager->read($takenImage);
-        $image = $image->resize(120,120);
-        $image->save(base_path('public/upload/food_images/'.$image_name));
-        $url = 'upload/food_images/'.$image_name;
+        $food_image = $request->file('food_image');
+        
+        $url = $this->fileupload->uploadFoodImage($food_image);
 
         MenuItem::insert([
             'food_name' => $request->food_name,
@@ -41,8 +40,100 @@ class MenuItemController extends Controller
     }
     //end method
 
-    public function editFood(MenuItemRequest $request){
+    public function allFood(){
+        $id = Auth::id();
+        $food = MenuItem::where('user_id',$id)->get();
 
+        return response()->json([
+            'food' => $food,
+            'message' => 'Get all food item'
+        ]);
        
     }// end method
+
+    public function allActiveFood(){
+        $id = Auth::id();
+        $active = MenuItem::where('user_id',$id)->where('status','active')->get();
+
+        return response()->json([
+            'allActiveFood' => $active,
+            'message' => 'All Active Foods'
+        ]);
+    }// end method
+
+    public function allInactiveFood(){
+        $id = Auth::id();
+        $inactive = MenuItem::where('user_id',$id)->where('status','inactive')->get();
+
+        return response()->json([
+            'allInactiveFood' => $inactive,
+            'message' => 'All Inactive Foods'
+        ]);
+    }// end method
+
+
+    public function updateFood(MenuItemRequest $request,$id){
+
+        /// Update Food item with image
+        if ($request->file('food_image')) {
+
+            $food_image = $request->file('food_image');
+        
+            $url = $this->fileupload->uploadFoodImage($food_image);
+
+            MenuItem::find($id)->update([
+                'food_name' => $request->food_name,
+                'price' => $request->price,
+                'size' => $request->size,
+                'description' => $request->description,
+                'cooking_time' => $request->cooking_time,
+                'food_image' => $url,
+                'updated_at' => Carbon::now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Update food with image successfully'
+            ]);
+
+            
+        }
+
+        /// Update food item without image
+        MenuItem::find($id)->update([
+            'food_name' => $request->food_name,
+            'price' => $request->price,
+            'size' => $request->size,
+            'description' => $request->description,
+            'cooking_time' => $request->cooking_time,
+            'updated_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Food item update successfully'
+        ]);
+    }/// end method
+
+    /// Food item Hide
+    public function foodInactive($id){
+        MenuItem::find($id)->update([
+            'status' => 'inactive',
+            'updated_at' => Carbon::now()
+        ]);
+
+        return response()->json([
+            'message' => 'Food item hide successfully'
+        ]);
+    }// end method
+
+     /// Food item Show
+     public function foodActive($id){
+        MenuItem::find($id)->update([
+            'status' => 'active',
+            'updated_at' => Carbon::now()
+        ]);
+
+        return response()->json([
+            'message' => 'Food item show successfully'
+        ]);
+    }/// end method
 }

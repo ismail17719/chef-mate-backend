@@ -23,7 +23,7 @@ class MenuItemRequest extends FormRequest
     {
         return [
            
-            'food_image' => 'extensions:png,jpeg,jpg'
+            'food_image' => 'extensions:png,jpeg,jpg',
           
         ];
     }

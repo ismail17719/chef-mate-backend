@@ -5,26 +5,26 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Kitchen;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
+
 
 class UserController extends Controller
 {
+
     /// User Register
     public function register(UserRequest $request){
 
         /// Create User
-        User::insert([
-            
+        User::create([  
             'full_name' => $request->full_name,
             'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'created_at' => Carbon::now()
+            'password' => Hash::make($request->password), 
+            'role' => 'user',
+            'status' => 'inactive'
         ]);
         
                   
@@ -81,14 +81,49 @@ class UserController extends Controller
     }
         
         
-    /// Logged in user data
+    /// Edit profile
 
-    public function loggedInUser(){
+    public function editProfile(){
         $userData = Auth::user();
 
         return response()->json([
             'user' => $userData,
-            'message' => 'Logged in user data',
+            'message' => 'Edit profile',
         ]);
+    }// end method
+
+    // Update profile
+    public function updateProfile(Request $request){
+        $id = Auth::id();
+        if ($request->file('profile_image')) {
+            $file = $request->file('profile_image');
+            $manger = new ImageManager(new Driver());
+            $name = hexdec(uniqid()).".".$file->getClientOriginalExtension();
+            $image = $manger->read($file);
+            $image = $image->resize(120,120);
+            $image->save(base_path('public/upload/user_images/'.$name));
+            $path = 'upload/user_images/'.$name;
+
+            User::find($id)->update([
+                'full_name' => $request->full_name,
+                'profile_image' => $path,
+                'updated_at' => Carbon::now()
+            ]);
+
+            return response()->json([
+                'message' => 'Your profile update successfully'
+            ]);
+        }
+
+        // without image
+        User::find($id)->update([
+            'full_name' => $request->full_name,
+            'updated_at' => Carbon::now()
+
+        ]);
+        return response()->json([
+            'message' => 'Your profile update successfully'
+        ]);
+
     }
 }

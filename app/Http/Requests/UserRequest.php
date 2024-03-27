@@ -22,10 +22,9 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'fullname' => 'required',
             'email' => 'required|string|email|unique:users',
-            'phone' => 'required|unique:users',
-            'password' => 'required|confirmed',
-            'address' => 'required',
+            'password' => 'required',
             'profile_image' => 'extensions:png,jpeg'
         ];
     }

@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('full_name')->nullable();
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('phone');
+            $table->string('phone')->nullable();
             $table->string('profile_image')->nullable();
-            $table->text('address');
+            $table->text('address')->nullable();
             $table->enum('role',['admin','chef','user'])->default('chef');
             $table->enum('status',['active','inactive'])->default('active');
             $table->timestamps();
