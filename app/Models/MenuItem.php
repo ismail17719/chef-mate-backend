@@ -14,5 +14,8 @@ class MenuItem extends Model
     public function weeklyMenus(){
         return $this->hasMany(WeeklyMenu::class);
     }
+    public function CartItems(){
+        return $this->hasMany(CartItem::class);
+    }
    
 }

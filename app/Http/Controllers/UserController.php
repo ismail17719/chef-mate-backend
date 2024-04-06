@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserOnlineEvent;
 use App\Http\Requests\UserRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
-
+use App\Services\FileUpload;
 
 class UserController extends Controller
 {
+    public function __construct(private FileUpload $fileupload)
+    {
+        
+    }
 
     /// User Register
     public function register(UserRequest $request){
@@ -61,7 +64,7 @@ class UserController extends Controller
             ]);
         }else{
             $token = $user->createToken($email)->plainTextToken;
-
+            event(new UserOnlineEvent($user,true));
             return response()->json([
                 'message' => 'Login Successfully',
                 'token' => $token
@@ -74,7 +77,11 @@ class UserController extends Controller
     //// User Logout
 
     public function logout(){
+        $user = Auth::user();
+        $user->last_seen_at = Carbon::now();
+        $user->save();
         Auth::user()->tokens()->delete();
+        event(new UserOnlineEvent($user,false));
         return response()->json([
             'message' => 'Logout Successfully'
         ]);
@@ -97,12 +104,8 @@ class UserController extends Controller
         $id = Auth::id();
         if ($request->file('profile_image')) {
             $file = $request->file('profile_image');
-            $manger = new ImageManager(new Driver());
-            $name = hexdec(uniqid()).".".$file->getClientOriginalExtension();
-            $image = $manger->read($file);
-            $image = $image->resize(120,120);
-            $image->save(base_path('public/upload/user_images/'.$name));
-            $path = 'upload/user_images/'.$name;
+           
+            $path = $this->fileupload->uploadFoodImage($file);
 
             User::find($id)->update([
                 'full_name' => $request->full_name,

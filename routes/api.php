@@ -1,13 +1,19 @@
 <?php
-
-use App\Http\Controllers\MenuItemController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ChefController;
-use App\Http\Controllers\DaysOfweekController;
-use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\VerifyIdController;
-use App\Http\Controllers\WeeklyMenuController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\{
+    CartController,
+    ConversationController,
+    MenuItemController,
+    ChefController,
+    DaysOfweekController,
+    MessageController,
+    OrderController,
+    PasswordResetController,
+    VerifyIdController,
+    WeeklyMenuController,
+    UserController,
+};
+
 
 // Chef Routes
 Route::prefix('/chef')->group(function(){
@@ -60,8 +66,6 @@ Route::prefix('/chef')->group(function(){
             Route::post('/weekly/menu/food/{food_id}/{day_id}', 'addWeeklyFood');
             Route::get('/today/menu', 'todayFood');
         });
-       
-
 
     });// end auth middleware
 
@@ -81,6 +85,37 @@ Route::prefix('/user')->group(function(){
             /// Edit Profile
             Route::post('/edit/profile','editProfile');
             Route::post('/update/profile','updateProfile');
-        });
+        });// end middleware
+    });// end controller
+
+            /// add to cart routes
+        Route::middleware('auth:sanctum')->group(function(){
+            Route::controller(CartController::class)->group(function(){
+                Route::post('/add-to-cart','addToCart');
+                Route::put('/cart/increment/{id}', 'incrementCartItem');
+                Route::put('/cart/decrement/{id}', 'decrementCartItem');
+                Route::get('/view/cart', 'viewCart');
+               
+            });// end controller
+       
+            // order routes
+            Route::controller(OrderController::class)->group(function(){
+                Route::get('/new/order','newOrder');
+                Route::get('/complete/order','completeOrder');
+               
+               
+            });// end controller
+        });// end middleware
+});// end prefix
+
+ // Chat Routes
+ Route::middleware('auth:sanctum')->group(function(){
+    Route::controller(ConversationController::class)->group(function(){
+        Route::post('/create/coversation/{id}','createCoversation');
+    });
+    Route::controller(MessageController::class)->group(function(){
+        Route::post('/send/message/{id}','sendMessage');
+        Route::get('/coversation/messages/{sender}/{receiver}', 'getConversationMessages');
+        Route::get('/users/with/conversation/{id}','getUsersWithConversations');
     });
 });

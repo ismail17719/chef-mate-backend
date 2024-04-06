@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->enum('role',['admin','chef','user'])->default('chef');
             $table->enum('status',['active','inactive'])->default('active');
+            $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();
         });
 

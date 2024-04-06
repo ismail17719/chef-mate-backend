@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserOnlineEvent;
 use Illuminate\Http\Request;
 use App\Http\Requests\ChefRequest;
 use App\Models\User;
@@ -104,7 +105,7 @@ class ChefController extends Controller
             ]);
         }else{
             $token = $user->createToken($email)->plainTextToken;
-
+            event(new UserOnlineEvent($user,true));
             return response()->json([
                 'message' => 'Login Successfully',
                 'token' => $token
@@ -117,7 +118,11 @@ class ChefController extends Controller
     //// User Logout
 
     public function logout(){
+        $user = Auth::user();
+        $user->last_seen_at = Carbon::now();
+        $user->save();
         Auth::user()->tokens()->delete();
+        event(new UserOnlineEvent($user,false));
         return response()->json([
             'message' => 'Logout Successfully'
         ]);
